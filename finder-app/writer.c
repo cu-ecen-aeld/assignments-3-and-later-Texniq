@@ -20,7 +20,7 @@ int main(int argc, char const *argv[])
 	FILE *f=fopen(filename,"w");
 
 	if(errno){
-		syslog(LOG_ERR,"Error(%d) while opening file %s: %s",errno,filename);
+		syslog(LOG_ERR,"Error(%d) while opening file %s",errno,filename);
 		return 1;
 	}
 
