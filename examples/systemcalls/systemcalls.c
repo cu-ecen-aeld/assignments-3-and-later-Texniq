@@ -1,4 +1,9 @@
 #include "systemcalls.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/wait.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -9,6 +14,10 @@
 */
 bool do_system(const char *cmd)
 {
+    if(!cmd || strlen(cmd)==0)
+        return false;
+
+    return system(cmd)==-1 ? false : true;
 
 /*
  * TODO  add your code here
@@ -49,6 +58,37 @@ bool do_exec(int count, ...)
     // and may be removed
     command[count] = command[count];
 
+   printf("\n");
+
+    if (access(command[0], X_OK) != 0)
+    {
+        return false;
+    }
+
+    int pid=fork();
+
+    if(pid==0) //child code
+    {
+        if(execv(command[0],command)==-1)
+        {
+            exit(EXIT_FAILURE);
+        }
+        
+    }//child code end
+    else if(pid==-1) //got some error
+    {
+        return false;
+    }
+    else
+    {
+        int wstatus;
+        wait(&wstatus);
+        if(WEXITSTATUS(wstatus)!=0)
+        {
+            return false;
+        }
+    }
+    
 /*
  * TODO:
  *   Execute a system command by calling fork, execv(),
@@ -84,6 +124,47 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     // and may be removed
     command[count] = command[count];
 
+    if (access(command[0], X_OK) != 0)
+    {
+        return false;
+    }
+
+    // int errno=0;
+    int pid=fork();
+
+    if(pid==0) //child code
+    {
+        
+        int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+        if(fd==-1)
+        {
+            exit(EXIT_FAILURE);   
+        }
+
+        if(dup2(fd,1)==-1)
+        {
+             exit(EXIT_FAILURE);   
+        }
+
+        if(execv(command[0],command)==-1)
+        {
+            exit(EXIT_FAILURE);
+        }
+        
+    }//child code end
+    else if(pid==-1) //got some error
+    {
+        return false;
+    }
+    else
+    {
+        int wstatus;
+        wait(&wstatus);
+        if(WEXITSTATUS(wstatus)!=0)
+        {
+            return false;
+        }  
+    }
 
 /*
  * TODO
